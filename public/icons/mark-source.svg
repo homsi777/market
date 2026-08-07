@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>NOVA MARKET</title>
+  <defs>
+    <linearGradient id="accent" x1="100" y1="80" x2="420" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00f0ff"/>
+      <stop offset=".52" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="45%" r="58%">
+      <stop offset="0" stop-color="#00f0ff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#050510" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#050510"/>
+  <circle cx="256" cy="256" r="214" fill="url(#halo)"/>
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#00f0ff" stroke-opacity=".16" stroke-width="2"/>
+  <circle cx="256" cy="256" r="164" fill="none" stroke="#a855f7" stroke-opacity=".22" stroke-width="3" stroke-dasharray="14 18"/>
+  <path d="M292 64 151 278h91l-22 170 141-225h-94z" fill="url(#accent)" filter="url(#glow)"/>
+  <path d="M292 64 151 278h91l-22 170 141-225h-94z" fill="none" stroke="#e8fbff" stroke-opacity=".72" stroke-width="3"/>
+</svg>

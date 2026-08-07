@@ -114,6 +114,20 @@ button { cursor: pointer; }
 .customer-recent-list span { display: grid; gap: 2px; min-width: 0; }
 .customer-recent-list b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .customer-recent-list small { color: var(--cyan); font: 10px var(--font-orbitron); }
+.install-banner { position: fixed; z-index: 27; left: 18px; bottom: 25px; display: flex; align-items: center; gap: 14px; max-width: 390px; padding: 10px 12px; border: 1px solid rgba(0,240,255,.28); border-radius: 16px; color: var(--text); background: rgba(7,8,21,.92); backdrop-filter: blur(16px); box-shadow: 0 14px 36px rgba(0,0,0,.28), 0 0 25px rgba(0,240,255,.08); }
+.install-banner-copy, .install-banner-actions { display: flex; align-items: center; gap: 9px; }
+.install-banner-copy { min-width: 0; flex: 1; }
+.install-banner-copy > span:last-child { display: grid; gap: 2px; }
+.install-banner-copy b { font-size: 12px; }
+.install-banner-copy small { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.install-banner-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 10px; color: var(--cyan); background: rgba(0,240,255,.1); }
+.install-btn { min-height: 36px; padding: 0 12px; border: 1px solid rgba(0,240,255,.35); border-radius: 10px; color: #031016; background: linear-gradient(100deg, var(--cyan), #d16df3); font-size: 11px; font-weight: 800; white-space: nowrap; }
+.install-dismiss { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; color: var(--muted); background: transparent; }
+.install-guide { width: min(520px, 100%); }
+.install-steps { display: grid; gap: 12px; margin: 20px 0 24px; padding: 0; list-style: none; }
+.install-steps li { display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-size: 13px; }
+.install-steps li > span { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 9px; color: var(--cyan); background: rgba(0,240,255,.09); }
+.install-steps b { color: var(--text); }
 
 .hero { min-height: calc(100dvh - 78px); display: grid; align-items: center; position: relative; padding: 52px 0 72px; overflow: hidden; }
 .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 60px; }
@@ -354,6 +368,8 @@ textarea.form-control { min-height: 110px; resize: vertical; }
   .cart-row img { width: 62px; height: 62px; }
   .cart-row > .qty { grid-column: 2; }
   .cart-row > .round-btn { position: absolute; left: 10px; }
+  .install-banner { right: 10px; left: 10px; bottom: 144px; max-width: none; }
+  .install-banner-copy small { overflow: hidden; text-overflow: ellipsis; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
