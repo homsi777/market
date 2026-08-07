@@ -1,0 +1,322 @@
+# TASK: Complete Frontend for E-Commerce Store — Customer Storefront + Admin Panel
+
+## 0. Read This First (Execution Rules for Codex)
+
+- This is a **brand-new, standalone project**. Do NOT reuse or reference any other project's code, conventions, or database. Ignore any prior task files.
+- **Scope of THIS task: FRONTEND ONLY.** Build the full customer storefront and the full admin panel as working UI, driven by **mock/in-memory data** (TypeScript mock data files). No real backend, no real API calls, no real database queries in this task. Structure the code so a real API can be plugged in later behind a single data-access layer (see §10).
+- The store's business model, for content/context only: the admin sources surplus/slow-moving stock from large European retailers, prepares it, and sells it **as new products**. Each product discloses its European source/brand as a **trust and selling point** — never framed as used or second-hand.
+- Execute everything autonomously and completely. Do not stop to ask questions. Deliver a complete, running, error-free frontend.
+- **All user-facing text must be in Arabic**, with full RTL layout (`dir="rtl"`, `lang="ar"`).
+- **Zero build errors, zero warnings, zero TypeScript errors.** The project must run cleanly with `npm run dev` and build cleanly with `npm run build`.
+- Local test database password (include in the sample `.env` / config placeholder for when the backend is added later): `12345678`.
+
+---
+
+## 1. Tech Stack (fixed — do not substitute)
+
+- **Framework:** Next.js (App Router) + TypeScript
+- **Styling:** Tailwind CSS (with a custom theme matching the design tokens in §3) + CSS variables
+- **Animation:** Framer Motion for entrance/scroll/hover transitions; plain Canvas 2D for the animated star-particle background
+- **Icons:** `lucide-react`
+- **Fonts:** Google Fonts — `Orbitron` (headings, logo, prices, numeric stats) and `Tajawal` (all Arabic body text). Load via `next/font`.
+- **State:** React Context + hooks for cart, wishlist, and auth-role simulation (no external state library required; if used, `zustand` is acceptable).
+- **PWA:** installable on Android, iOS (Safari add-to-home-screen), and desktop browsers. Use a `manifest.webmanifest` + a service worker (via `next-pwa` or an equivalent hand-rolled SW). App must be installable and pass an install prompt on supported browsers.
+- **Data:** TypeScript mock data modules under `src/data/` (products, categories, orders, customers, etc.). All UI reads from these through a single data-access layer in `src/lib/api/` (functions return Promises so they can later call a real API without UI changes).
+
+---
+
+## 2. Environments & Responsiveness (critical — must be handled explicitly)
+
+The app runs on desktop browsers, Android phones, and iPhones. Handle all of the following:
+
+- **Breakpoints (Tailwind):** mobile `< 640px`, tablet `640–1024px`, desktop `> 1024px`. Every screen must be tested and correct at all three widths.
+- **Touch-first:** all interactive targets ≥ 44×44px. No hover-only interactions — every hover action must also work on tap. Provide `:active`/pressed states for touch feedback.
+- **Custom cursor** (the cyan dot + trailing ring from the reference design) is **desktop-with-mouse only** — disable it entirely on touch devices (detect via `(pointer: coarse)`), and fall back to the native cursor.
+- **`prefers-reduced-motion`:** when set, disable the particle animation, floating/rotating hero motion, and large transitions; keep the UI fully usable and static.
+- **Mobile navigation:** a fixed bottom navigation bar on mobile (الرئيسية / الأقسام / السلة / حسابي) with safe-area insets (`env(safe-area-inset-bottom)`) so it clears the iPhone home indicator. Desktop uses the top navbar instead.
+- **iOS specifics:** respect safe-area insets top/bottom; ensure `100dvh` (not `100vh`) is used for full-height sections so mobile browser chrome doesn't clip content; ensure the install/add-to-home-screen path works in Safari.
+- **Performance on mobile:** reduce particle count on small screens (e.g. ~40 particles on mobile vs ~110 on desktop) and lazy-mount heavy visual effects.
+
+---
+
+## 3. Design System (visual identity — match precisely)
+
+Dark VR/sci-fi aesthetic: glassmorphism, neon glow, animated depth.
+
+### CSS Variables / Theme tokens
+```
+--bg:        #050510   /* page background */
+--surface:   rgba(255,255,255,0.04)
+--glass:     rgba(255,255,255,0.07)   /* glassmorphism panels */
+--border:    rgba(255,255,255,0.12)
+--cyan:      #00f0ff   /* primary / accent */
+--purple:    #a855f7   /* secondary */
+--pink:      #ec4899   /* cart badge / sale */
+--gold:      #fbbf24   /* stars / highlights */
+--text:      #e2e8f0   /* primary text */
+--muted:     #94a3b8   /* secondary text */
+--glow-cyan:   0 0 30px rgba(0,240,255,0.4)
+--glow-purple: 0 0 30px rgba(168,85,247,0.4)
+```
+
+### Rules
+- **Dark mode only.**
+- **Glassmorphism:** panels use `backdrop-filter: blur()` + translucent white surfaces + hairline borders.
+- **Neon glow:** interactive elements glow (box-shadow / text-shadow) on hover/focus/active.
+- **Gradients:** primary gradient is cyan → purple → pink (used on the logo, key headings words, primary buttons, add buttons).
+- **Fonts:** Orbitron for logo/headings/prices/numeric stats; Tajawal for all Arabic body/paragraph/label text.
+- **Max content width:** 1400px, centered, with responsive side padding.
+- **Corners:** cards ~16–20px radius; controls ~12–14px radius.
+
+### Animated background (must be LIVE, not static)
+A full-viewport fixed Canvas behind all content (`z-index: 0`):
+- A field of **moving, twinkling star-particles** (~110 desktop / ~40 mobile) in cyan/purple/pink. Each particle drifts slowly, wraps at edges, and pulses its opacity (twinkle).
+- **Connection lines** drawn between particles closer than ~110px, fading with distance.
+- Driven by `requestAnimationFrame`; re-sizes with the window; paused when `prefers-reduced-motion` is set or the tab is hidden.
+- Above the canvas, add 2–3 large blurred colored "orbs" that slowly float, plus (desktop only) an optional subtle 3D perspective grid floor. These create depth without hurting readability.
+
+---
+
+## 4. Project Structure
+
+```
+src/
+├─ app/
+│  ├─ (storefront)/
+│  │  ├─ layout.tsx              (RTL, fonts, background, top navbar + mobile bottom nav)
+│  │  ├─ page.tsx                (Home)
+│  │  ├─ category/[slug]/page.tsx
+│  │  ├─ product/[slug]/page.tsx
+│  │  ├─ search/page.tsx
+│  │  ├─ cart/page.tsx
+│  │  ├─ wishlist/page.tsx
+│  │  ├─ checkout/page.tsx
+│  │  ├─ account/
+│  │  │  ├─ page.tsx             (account overview)
+│  │  │  ├─ orders/page.tsx
+│  │  │  ├─ orders/[id]/page.tsx
+│  │  │  ├─ addresses/page.tsx
+│  │  │  └─ returns/page.tsx
+│  │  ├─ login/page.tsx
+│  │  └─ register/page.tsx
+│  ├─ admin/
+│  │  ├─ layout.tsx              (admin shell: sidebar + topbar, same visual identity)
+│  │  ├─ page.tsx                (analytics dashboard)
+│  │  ├─ products/page.tsx
+│  │  ├─ products/new/page.tsx
+│  │  ├─ products/[id]/edit/page.tsx
+│  │  ├─ categories/page.tsx
+│  │  ├─ orders/page.tsx
+│  │  ├─ orders/[id]/page.tsx
+│  │  ├─ inventory/page.tsx
+│  │  ├─ promotions/page.tsx
+│  │  ├─ returns/page.tsx
+│  │  ├─ customers/page.tsx
+│  │  ├─ customers/[id]/page.tsx
+│  │  ├─ reports/page.tsx
+│  │  ├─ roles/page.tsx
+│  │  └─ settings/page.tsx
+│  └─ login page shared entry (see §5 auth routing)
+├─ components/
+│  ├─ background/ (ParticleCanvas, Orbs, GridFloor, CustomCursor)
+│  ├─ storefront/ (Navbar, MobileBottomNav, Hero, StatsBar, CategoryStrip, ProductCard, ProductGallery, RelatedProducts, CartDrawer, Toast, Filters, RatingStars, SourceBadge, PriceBlock)
+│  ├─ admin/ (Sidebar, Topbar, KpiCard, DataTable, Chart, StatusBadge, ProductForm, ImageUploader, FilterBar)
+│  └─ ui/ (Button, Input, Select, Modal, Tabs, Badge, Skeleton, EmptyState)
+├─ context/ (CartContext, WishlistContext, AuthContext, ToastContext)
+├─ data/ (products.ts, categories.ts, orders.ts, customers.ts, promotions.ts, returns.ts, stats.ts)
+├─ lib/
+│  ├─ api/ (products.ts, categories.ts, orders.ts, ... — async funcs returning mock data)
+│  ├─ hooks/ (useScrollReveal, useParticles, useMediaQuery, useReducedMotion, useInstallPrompt)
+│  └─ format.ts (currency/number/date formatting — Western digits, Arabic labels)
+└─ styles/ (globals.css with theme tokens + RTL base)
+public/
+├─ manifest.webmanifest
+├─ icons/ (PWA icons: 192, 256, 384, 512 + maskable)
+└─ (placeholder product images)
+```
+
+---
+
+## 5. Auth Routing (simulated in this frontend task)
+
+- A single login form at `/login` (Arabic). On submit, simulate authentication against mock users.
+- Mock users include at least: one `Customer` and one `SuperAdmin`.
+- After login: if the signed-in role is `Admin` or `SuperAdmin` → redirect to `/admin`. Otherwise → redirect to the storefront home `/`.
+- `AuthContext` holds the current mock user + role. Admin routes are guarded: if role is not Admin/SuperAdmin, redirect to `/login`. (This is UI-level guarding for now; real server enforcement comes with the backend later.)
+- Provide a visible way to switch/log out for testing.
+
+---
+
+## 6. Customer Storefront — Screens (all required, all Arabic RTL)
+
+### 6.1 Home (`/`)
+- Live particle background + orbs.
+- Top navbar (desktop): logo (gradient), nav links (الرئيسية، الأقسام، العروض، تواصل), search icon, wishlist icon, cart icon with count badge.
+- **Hero:** headline with one gradient word, subtext about authentic European products sold as new, primary CTA "استكشف المنتجات ←", and a featured product visual — a **real product image** inside the glowing framed/haloed treatment (rotating hologram rings + gentle float), with a price tag showing the discounted price and the original (struck-through) price. On desktop, the hero visual tilts subtly toward the mouse; on touch, no tilt.
+- **Stats bar:** 4 glass cards with count-up animation on scroll into view (e.g. عدد المنتجات، رضا العملاء %، عدد العلامات الأوروبية، سرعة التوصيل). Numbers use Western digits.
+- **Category strip:** horizontally scrollable category chips/cards with icons (إلكترونيات، أدوات منزلية، أزياء، مستلزمات أطفال، العناية، ...).
+- **"وصل حديثاً" grid** and **"الأكثر رواجاً" grid** of ProductCards.
+- **Promo banner** section (glass, gradient, animated scan-line) for a featured offer.
+- Footer.
+
+### 6.2 Category page (`/category/[slug]`)
+- Page title + product count.
+- **Filters** (collapsible on mobile as a bottom sheet/drawer): price range, category/sub-category, source country, discount-only toggle, in-stock toggle.
+- **Sort** control: الأحدث، الأقل سعراً، الأعلى سعراً، الأكثر خصماً، الأعلى تقييماً.
+- Responsive product grid with scroll-reveal stagger.
+- Empty state when no results.
+
+### 6.3 Product page (`/product/[slug]`)
+- **Image gallery** (multiple images, thumbnail strip, swipeable on touch, zoom on desktop).
+- Title, category, rating (stars + review count).
+- **Price block:** current price, original price struck-through, discount percentage badge, "وفّر X%".
+- **Source badge:** clearly show the European source/brand (e.g. "الأصل: ألمانيا" / brand name) as a trust point.
+- **Full specifications** table (written by admin in the product data).
+- Stock indicator (e.g. "بقيت قطعة واحدة" when quantity is low), quantity selector, "أضف إلى السلة", "أضف إلى المفضلة".
+- **Related products** strip.
+- **Reviews** section (list of mock reviews + average rating).
+
+### 6.4 Search (`/search`)
+- Search input (works from the navbar search icon too), live-filtered results from mock data, same card grid, empty state.
+
+### 6.5 Cart (`/cart`) + Cart Drawer
+- Line items with image, name, unit price, quantity stepper, remove.
+- Order summary: subtotal, discount, shipping estimate, total.
+- Coupon code input (validates against mock coupons).
+- "متابعة إلى الدفع" CTA.
+- A slide-in **cart drawer** is also available from the navbar cart icon on all pages.
+- Toast on add-to-cart ("تمت إضافة … إلى السلة").
+
+### 6.6 Wishlist (`/wishlist`)
+- Grid of saved products; move-to-cart and remove actions.
+
+### 6.7 Checkout (`/checkout`)
+- Multi-step (stepper): (1) العنوان، (2) الشحن، (3) الدفع، (4) المراجعة والتأكيد.
+- Address form, shipping method selection, payment method placeholder, order review, "تأكيد الطلب".
+- On confirm: show an order-confirmation screen with a mock order number.
+
+### 6.8 Account area
+- `/account`: overview (اسم الزبون، ملخص، روابط سريعة).
+- `/account/orders`: list of the customer's orders with status badges; `/account/orders/[id]`: order detail + timeline.
+- `/account/addresses`: manage saved addresses.
+- `/account/returns`: request a return/exchange for a delivered order; list existing return requests with status.
+
+### 6.9 Login (`/login`) + Register (`/register`)
+- Arabic forms, validation, glassmorphism cards, gradient CTA. Login routes by role per §5.
+
+---
+
+## 7. Admin Panel — Screens (all required, same visual identity, all Arabic RTL)
+
+Admin shell: collapsible **sidebar** (right side for RTL) with sections + a **topbar** (search, notifications, admin avatar, logout). Same dark VR identity, but denser and calmer (fewer heavy animations, glass panels, clear data tables).
+
+### 7.1 Dashboard (`/admin`)
+- **KPI cards** (glass, with count-up): مبيعات اليوم، إجمالي الإيرادات (أسبوعي/شهري)، عدد الطلبات، متوسط قيمة الطلب.
+- **Sales trend chart** (last 30 days) — line/area chart.
+- **Top products** (top 5) list.
+- **Low-stock alerts** panel.
+- **Recent orders** table (last 10) with status badges.
+
+### 7.2 Products (`/admin/products`)
+- Data table: image, name, SKU, category, price, stock, status, actions (edit/delete).
+- Search + category filter + pagination.
+- `/admin/products/new` and `/admin/products/[id]/edit`: **product form** — name, SKU, description, price, original/compare price, stock quantity, category selector, **full specifications editor** (key/value rows), **source/supplier field (European retailer/brand + country)**, and a **multi-image uploader** (drag-and-drop, reorder, set primary, delete) — mock upload (store object URLs / base64 in memory for this task).
+
+### 7.3 Categories (`/admin/categories`)
+- Tree view (parent/subcategory) with add/edit/delete and drag-to-reorder.
+
+### 7.4 Orders (`/admin/orders`)
+- Table with filters (status, date range, customer) + search.
+- `/admin/orders/[id]`: order detail — items, customer, address, totals, status timeline, and a status update control (قيد المعالجة → مؤكد → مشحون → مسلّم → ملغى).
+
+### 7.5 Inventory (`/admin/inventory`)
+- Per-product: total quantity, available (total minus reserved), low-stock threshold (editable), status.
+- A separate **low-stock** filtered view.
+- Stock-movement log (mock): each change with reason, date, and actor.
+- Manual quantity adjustment with a required reason field.
+
+### 7.6 Promotions / Marketing (`/admin/promotions`)
+- **Discounts:** percentage or fixed amount on a product/category, with start/end dates.
+- **Bundles / combo deals:** select 2+ products, set a special bundle price + title + image.
+- **Coupon codes:** code, percentage/fixed, usage limit, expiry.
+- **Quantity-tiered discount:** buy N+ of a product → automatic discount tier.
+- List + create/edit forms for each.
+
+### 7.7 Returns & Exchanges (`/admin/returns`)
+- List of return/exchange requests with status.
+- Detail: approve/decline (with internal decline reason), mark as received, issue refund or **store credit**, restock toggle, optional restocking fee.
+
+### 7.8 Customers (`/admin/customers`)
+- Table: customer, orders count, total spent, status.
+- `/admin/customers/[id]`: profile, order history, notes/tags, timeline.
+
+### 7.9 Reports (`/admin/reports`)
+- Sales report by custom date range (daily/weekly/monthly), by category, by product. Totals: revenue, orders, average order value. Include at least one chart + one table + export button (mock).
+
+### 7.10 Roles & Permissions (`/admin/roles`)
+- Manage roles (e.g. مدير عام، مسؤول مبيعات، مسؤول مخزون) and toggle per-section permissions (UI only for now).
+
+### 7.11 Settings (`/admin/settings`)
+- Store info (name, logo, contact), shipping zones & rates, payment methods, tax, SEO defaults. Forms only (mock persistence).
+
+---
+
+## 8. Shared UI Behaviors
+
+- **Toasts:** bottom-corner glass toasts for add-to-cart, wishlist, form success/error. Respect RTL (slide from the correct side).
+- **Skeletons/loading states** for lists and detail pages.
+- **Empty states** with icon + message + CTA for every list that can be empty.
+- **Scroll-reveal** stagger for cards/sections (disabled under reduced-motion).
+- **Number & date formatting** via `src/lib/format.ts`: always Western digits (0–9), Arabic labels, prices formatted consistently (currency symbol placement per Arabic convention).
+- **Accessibility:** semantic HTML, `aria-label` on icon-only buttons, visible focus rings, sufficient contrast against the dark background, keyboard navigability for menus, drawers, and modals.
+
+---
+
+## 9. PWA Requirements
+
+- `manifest.webmanifest`: name (Arabic + Latin), short_name, `dir: "rtl"`, `lang: "ar"`, `display: "standalone"`, `background_color: #050510`, `theme_color: #050510`, start_url, and a full icon set (192/256/384/512 + a maskable icon).
+- Service worker: cache the app shell and static assets for offline load of visited pages; network-first for data. Register it safely (only in production/when supported).
+- **Install prompt:** implement a `useInstallPrompt` hook capturing `beforeinstallprompt` and show a tasteful "ثبّت التطبيق" button on Android/desktop; on iOS Safari, show a short Arabic instruction for "أضف إلى الشاشة الرئيسية".
+- Verify the app is installable and launches standalone.
+
+---
+
+## 10. Data Layer (so backend can plug in later without UI rewrites)
+
+- All screens read/write through `src/lib/api/*` functions that currently return the mock data from `src/data/*` (wrapped in Promises, with small simulated latency + loading states).
+- Keep all TypeScript types/interfaces in a shared `src/types/` and reuse them across data, api, and components.
+- Do NOT scatter mock data directly inside components — always go through the api layer, so swapping to real HTTP later touches only `src/lib/api/*`.
+- Add a sample `.env.local.example` with `DATABASE_PASSWORD=12345678` (documented as the local test DB password for the future backend; not used by the frontend now).
+
+---
+
+## 11. Mock Data Requirements
+
+Provide realistic Arabic mock data:
+- **Categories:** at least 6 top-level (إلكترونيات، أدوات منزلية، أزياء، مستلزمات أطفال، العناية، رياضة) with some subcategories.
+- **Products:** at least 30 products spread across categories, each with: name, slug, SKU, 2–4 images (placeholders), description, full specifications, price, original/compare price, discount %, stock quantity (some low / "بقيت قطعة واحدة"), source country + European brand, rating, review count, badges (جديد / تخفيض / رائج).
+- **Orders:** at least 15 mock orders across all statuses, with items, totals, customer, address, timeline.
+- **Customers:** at least 10, with order counts and totals.
+- **Promotions, coupons, bundles, returns, stock movements, reviews:** enough sample rows to make every screen look populated and real.
+- **Stats:** dashboard KPIs + a 30-day sales series for the trend chart.
+
+---
+
+## 12. Acceptance Criteria (must all pass)
+
+1. `npm install` → `npm run dev` runs with **zero errors and zero warnings**; `npm run build` succeeds cleanly with **zero TypeScript errors**.
+2. Every screen listed in §6 and §7 exists, is reachable, and renders correctly with mock data.
+3. Fully **Arabic RTL** throughout, no leftover English in the UI, no layout breakage in RTL.
+4. **Responsive** and correct at mobile (<640), tablet (640–1024), and desktop (>1024). Mobile shows the bottom nav; desktop shows the top navbar.
+5. **Touch-friendly:** all targets ≥44px; every hover action also works on tap; custom cursor disabled on touch; iOS safe-areas respected; full-height uses `100dvh`.
+6. The **animated star-particle background is live and moving** (with connection lines, twinkle, orbs), and honors `prefers-reduced-motion` and tab-visibility.
+7. Cart, wishlist, coupons, filters, sort, search, checkout steps, and login-role routing all **work** against mock data.
+8. Admin dashboard charts, KPIs (count-up), tables, product form with multi-image uploader, and all admin sections **work** against mock data.
+9. **PWA installs** on Android/desktop (install prompt) and shows iOS add-to-home instructions; launches standalone with the correct icon, name, and theme color.
+10. Numbers render in **Western digits**; dates/prices formatted consistently.
+11. Code is organized per §4; all data flows through `src/lib/api/*`; types are shared; no mock data hard-coded inside components.
+
+---
+
+## 13. Explicitly Out of Scope for THIS Task
+- Real backend, real database, real authentication/authorization enforcement, real payments, real image storage — all come in a later task. This task delivers the complete, polished, error-free FRONTEND with mock data and a clean data-access seam for the backend to attach to.

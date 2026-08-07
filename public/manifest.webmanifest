@@ -1,0 +1,12 @@
+{
+  "name": "NOVA MARKET | سوق نوفا",
+  "short_name": "NOVA",
+  "description": "منتجات أوروبية أصلية تصل إليك جديدة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050510",
+  "theme_color": "#050510",
+  "icons": [{ "src": "/next.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
